@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.12.0 - 2015-07-07T00:26:33.204Z
+ * Version: 0.12.1 - 2015-08-24T15:23:30.974Z
  * License: MIT
  */
 
@@ -382,11 +382,11 @@ uis.controller('uiSelectCtrl',
       data = data || ctrl.parserResult.source($scope);
       var selectedItems = ctrl.selected;
       //TODO should implement for single mode removeSelected
-      if ((angular.isArray(selectedItems) && !selectedItems.length) || !ctrl.removeSelected) {
+      if (ctrl.isEmpty() || (angular.isArray(selectedItems) && !selectedItems.length) || !ctrl.removeSelected) {
         ctrl.setItemsFn(data);
       }else{
         if ( data !== undefined ) {
-          var filteredItems = data.filter(function(i) {return selectedItems.indexOf(i) < 0;});
+          var filteredItems = data.filter(function(i) {return selectedItems && selectedItems.indexOf(i) < 0;});
           ctrl.setItemsFn(filteredItems);
         }
       }
@@ -803,6 +803,9 @@ uis.directive('uiSelect',
         $select.onSelectCallback = $parse(attrs.onSelect);
         $select.onRemoveCallback = $parse(attrs.onRemove);
         
+        //Limit the number of selections allowed
+        $select.limit = (angular.isDefined(attrs.limit)) ? parseInt(attrs.limit, 10) : undefined;
+
         //Set reference to ngModel from uiSelectCtrl
         $select.ngModel = ngModel;
 
@@ -905,8 +908,8 @@ uis.directive('uiSelect',
           if (!contains && !$select.clickTriggeredSelect) {
             //Will lose focus only with certain targets
             var focusableControls = ['input','button','textarea'];
-            var targetScope = angular.element(e.target).scope(); //To check if target is other ui-select
-            var skipFocusser = targetScope && targetScope.$select && targetScope.$select !== $select; //To check if target is other ui-select
+            var targetController = angular.element(e.target).controller('uiSelect'); //To check if target is other ui-select
+            var skipFocusser = targetController && targetController !== $select; //To check if target is other ui-select
             if (!skipFocusser) skipFocusser =  ~focusableControls.indexOf(e.target.tagName.toLowerCase()); //Check if target is input, button or textarea
             $select.close(skipFocusser);
             scope.$digest();
@@ -1021,7 +1024,7 @@ uis.directive('uiSelect',
             }
 
             // Hide the dropdown so there is no flicker until $timeout is done executing.
-            dropdown[0].style.visibility = 'hidden';
+            dropdown[0].style.opacity = 0;
 
             // Delay positioning the dropdown until all choices have been added so its height is correct.
             $timeout(function(){
@@ -1036,7 +1039,7 @@ uis.directive('uiSelect',
               }
 
               // Display the dropdown once it has been positioned.
-              dropdown[0].style.visibility = '';
+              dropdown[0].style.opacity = 1;
             });
           } else {
               if (dropdown === null) {
@@ -1145,7 +1148,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
 
       ctrl.getPlaceholder = function(){
         //Refactor single?
-        if($select.selected.length) return;
+        if($select.selected && $select.selected.length) return;
         return $select.placeholder;
       };
 
@@ -1244,6 +1247,9 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
       };
 
       scope.$on('uis:select', function (event, item) {
+        if($select.selected.length >= $select.limit) {
+          return;
+        }
         $select.selected.push(item);
         $selectMultiple.updateModel();
       });
