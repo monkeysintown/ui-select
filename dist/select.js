@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.12.1 - 2015-07-28T03:50:59.076Z
+ * Version: 0.12.0 - 2015-07-07T00:26:33.204Z
  * License: MIT
  */
 
@@ -1021,7 +1021,7 @@ uis.directive('uiSelect',
             }
 
             // Hide the dropdown so there is no flicker until $timeout is done executing.
-            dropdown[0].style.opacity = 0;
+            dropdown[0].style.visibility = 'hidden';
 
             // Delay positioning the dropdown until all choices have been added so its height is correct.
             $timeout(function(){
@@ -1036,7 +1036,7 @@ uis.directive('uiSelect',
               }
 
               // Display the dropdown once it has been positioned.
-              dropdown[0].style.opacity = 1;
+              dropdown[0].style.visibility = '';
             });
           } else {
               if (dropdown === null) {
@@ -1195,7 +1195,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
             result = $select.parserResult.modelMapper(scope, locals);
             if($select.parserResult.trackByExp){
                 var matches = /\.(.+)/.exec($select.parserResult.trackByExp);
-                if(matches.length>0 && result[matches[1]] == value[matches[1]]){
+                if(matches && matches.length>0 && result[matches[1]] == value[matches[1]]){
                     resultMultiple.unshift(list[p]);
                     return true;
                 }
@@ -1488,6 +1488,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
     }
   };
 }]);
+
 uis.directive('uiSelectSingle', ['$timeout','$compile', function($timeout, $compile) {
   return {
     restrict: 'EA',
